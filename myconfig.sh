@@ -10,7 +10,7 @@ iwconfig wlan0 mode Ad-hoc
 # cell name
 iwconfig wlan0 essid MyNet
 # channel
-iwconfig wlan0 channel 7
+iwconfig wlan0 channel 3
 # data rate
 iwconfig wlan0 rate 11MB
 # identity of ad hoc network cell

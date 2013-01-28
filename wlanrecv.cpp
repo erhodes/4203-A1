@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "wlan.hpp"
+#include "nbr_table.h"
 
 // 
 // WLANAddr
@@ -178,6 +179,8 @@ Outcome init()
 // receive data over a socket
 void Receive()
 {
+    //neighbour table
+    nbr_table table;
    // pointer to received data
    unsigned char * buff = new unsigned char[ifconfig.mtu];
    unsigned int i; // frame length
@@ -206,6 +209,7 @@ void Receive()
             break; // exit the loop
 	 }
       }
+      //TODO: spin this off into a new thread
       printf("frame received\n");
 
       char asciiSrcAddr[32], asciiDestAddr[32];
@@ -221,7 +225,6 @@ void Receive()
 
       printf("wlan:%s<<%s\n", asciiDestAddr, asciiSrcAddr);
 
-//yo my code starts now dawg
 	//in the future, hello beacons will be much more advanced
 	char * message = (char *)(buff + sizeof(WLANHeader));
 	const char * beacon = "hello";
@@ -229,6 +232,8 @@ void Receive()
 		printf("new table entry: %s true -1", asciiSrcAddr);
 	}
 	printf("message: %s\n",message);
+    table.beaconRecieved(src);
+    table.printTable();
    }
 }
 
