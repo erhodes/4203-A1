@@ -25,6 +25,15 @@
 #include "wlan.hpp"
 #include "nbr_table.h"
 
+// THREAD INCLUDES
+
+#include <pthread.h>
+
+// THREADING DEFINES
+
+
+
+
 // 
 // WLANAddr
 //
@@ -194,6 +203,7 @@ void Receive()
       // loop until a non-empty frame has been received on "device"
       while (true)
       {
+	printf("FML\n");
          // wait and receive a frame
          fromlen = sizeof(from);
          i = recvfrom(ifconfig.sockid, buff, ifconfig.mtu, 0, 
@@ -244,11 +254,141 @@ void shutdown()
    if (ifconfig.sockid != -1) close(ifconfig.sockid);
 }
 
+
+Outcome MySend() 
+{ 
+   // send buffer size
+   # define BUFFSIZE 256
+   // send buffer
+   unsigned char buff[BUFFSIZE]; 
+   // destination address (ASCII)
+   char rp[] ="ff:ff:ff:ff:ff:ff"; // broadcast
+   //char rp[] ="1c:bd:b9:7e:b6:5a"; // unicast
+   // destination address (binary)
+   WLANAddr daddr;
+   // data
+   char dp[] = "This is a shot message!"; 
+
+   // convert destination address from ASCII to binary
+   daddr.str2wlan(rp);
+
+   // store the destination address
+   memmove(&hdr.destAddr, daddr.data, WLAN_ADDR_LEN);
+
+   // store the source address
+   memmove(&hdr.srcAddr, ifconfig.hwaddr.data, WLAN_ADDR_LEN);
+
+   // set the type field
+   hdr.type = htons(IP_TYPE);
+
+   // store the header into the message 
+   memmove(buff, &hdr, WLAN_HEADER_LEN);
+
+   // store the payload
+   memmove(buff+WLAN_HEADER_LEN, dp, strlen(dp));
+
+   // set the "to address"
+   struct sockaddr_ll to = {0};
+   int tolen = sizeof(to);
+   to.sll_family = AF_PACKET;
+   to.sll_ifindex = ifconfig.ifindex;
+   memmove(&(to.sll_addr), daddr.data, WLAN_ADDR_LEN);
+   to.sll_halen = 6;
+
+   // send a frame
+   int sentlen = sendto(
+      ifconfig.sockid, buff, WLAN_HEADER_LEN+strlen(dp), 0, 
+      (sockaddr *) &to, tolen);
+
+   if (sentlen == -1 ) 
+   {
+      printf("sendto() failed %s\n", strerror(errno));
+      return NOK;
+   }
+   return OK;
+}
+
+
+
+
+
+void *receivingThread(void * threadid){
+	long tid;
+	tid = (long)threadid;
+	
+
+	printf("Receive Thread Started Successfully");
+
+	Receive();
+
+	pthread_exit(NULL);
+}
+
+
+void *sendHelloBeaconThread(void * threadid){
+	long tid;
+	tid = (long)threadid;
+
+	printf("Send Thread Started Successfully");
+	
+	int MINIMUM_WAIT_TIME = 2;
+	int MAXIMUM_WAIT_TIME = 10;
+
+	long randomWaitTime = MINIMUM_WAIT_TIME + rand() % (MAXIMUM_WAIT_TIME - MINIMUM_WAIT_TIME);
+
+	while(1){
+		
+		printf("SENDING\n");
+		MySend();
+		sleep(randomWaitTime);
+	}
+
+
+	pthread_exit(NULL);
+}
+
+
+
+Outcome createSendThread(){
+	pthread_t sendThread;
+	long tSend;
+	int sendThreadCreationStatus = pthread_create(&sendThread, NULL, sendHelloBeaconThread, (void*)tSend);
+        if(sendThreadCreationStatus){
+                printf("ERROR: Failed to create the send hello beacon thread with status code %d\n", sendThreadCreationStatus);
+                exit(-1);
+        }else{
+		return OK;
+	}
+	return NOK;
+}
+
+Outcome createReceiveThread(){
+	pthread_t receiveThread;
+	long tReceive;
+	int receiveThreadCreationStatus = pthread_create(&receiveThread, NULL, receivingThread, (void*)tReceive);
+        if(receiveThreadCreationStatus){
+                printf("ERROR: Failed to create the reception thread %d\n", receiveThreadCreationStatus);
+                exit(-1);
+        }else{
+		return OK;
+	}
+	return NOK;
+}
+
+
+
 main()
 {
    if (init()==OK) 
    {
-      Receive();
-      shutdown();
+
+	if(createSendThread() == OK){
+		if(createReceiveThread() == OK){
+			while(1){
+
+			}
+      			shutdown();
+		}
+	}
    }
 }
