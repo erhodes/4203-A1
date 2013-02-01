@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string>
+#include <vector>
+
+using namespace std;
+
 class nbr_table
 {
 public:
@@ -14,10 +19,17 @@ public:
     /*called when a beacon is recieved. If the neighbor is already in the table, update as necessary.
       Otherwise add it into the table
       */
-    void beaconRecieved(char* senderAddress);
+    void beaconRecieved(string senderAddress);
+
+    /*
+      prints out details on every element in entries
+      */
     void printTable();
 protected:
-    nbr_entry* entries;
+    vector<nbr_entry> entries;
+    static const int MAX_ELAPSE_TIME = 30;
+
+    bool contains(string address);
 };
 
 #endif // NBR_TABLE_H

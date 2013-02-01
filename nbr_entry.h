@@ -3,16 +3,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <iostream>
+
+using namespace std;
 
 class nbr_entry
 {
 public:
     nbr_entry();
-    nbr_entry(char*);
+    nbr_entry(string);
     void print();
+    void update();
+    void newBeacon();
+
+    string getAddress(){ return address;  }
+    int getLastRecorded() { return last_recorded; }
+    bool getArrival() { return arrival; }
 
 protected:
-    char* address;
+    string address;
     int last_recorded;
     bool arrival;
 };

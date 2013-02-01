@@ -5,20 +5,29 @@ nbr_entry::nbr_entry(){
     last_recorded = -1;
 }
 
-nbr_entry::nbr_entry(char* addr){
+nbr_entry::nbr_entry(string addr){
     arrival = true;
     last_recorded = -1;
     address = addr;
 }
 
+void nbr_entry::newBeacon(){
+    arrival = true;
+    last_recorded = -1;
+}
+
 void nbr_entry::print(){
-    printf("%s      ",
-           address);
+    cout << address << "     ";
     if (arrival){
-        printf("True        ");
+        cout << "True       ";
     }
     else{
-        printf("False       ");
+        cout << "False       ";
     }
-    printf("%i \n",last_recorded);
+    cout << last_recorded << endl;
+}
+
+void nbr_entry::update(){
+    last_recorded++;
+    arrival = false;
 }
