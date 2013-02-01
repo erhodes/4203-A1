@@ -14,7 +14,7 @@ class nbr_table
 {
 public:
     nbr_table();
-    //the random table update thing. Resets values to false, increments time?
+    //updates the table. Sets all arrival beacons to false, increments last_recorded
     void update();
     /*called when a beacon is recieved. If the neighbor is already in the table, update as necessary.
       Otherwise add it into the table
@@ -27,9 +27,8 @@ public:
     void printTable();
 protected:
     vector<nbr_entry> entries;
-    static const int MAX_ELAPSE_TIME = 30;
-
-    bool contains(string address);
+	//determines how long a neighbour can go without sending a hello beacon before it is considered lost
+    static const int MAX_ELAPSE_TIME = 20;
 };
 
 #endif // NBR_TABLE_H

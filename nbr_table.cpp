@@ -29,6 +29,8 @@ void nbr_table::update(){
     for (int i = 0; i < entries.size(); i++){
         entries.at(i).update();
         if (entries.at(i).getLastRecorded() > MAX_ELAPSE_TIME){
+	    //let the user know that something was deleted
+	    cout <<"IARP: neighbour lost protocol: " << entries.at(i).getAddress() << endl;
             //delete the current element
             entries.erase(entries.begin()+i);
             //modify i to acommodate the change
@@ -44,13 +46,4 @@ void nbr_table::printTable(){
         entries.at(i).print();
     }
     printf("\n");
-}
-
-bool nbr_table::contains(string address){
-    for (int i = 0; i < entries.size(); i++){
-        if (entries.at(i).getAddress() == address){
-            return true;
-        }
-    }
-    return false;
 }

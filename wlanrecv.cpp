@@ -1,6 +1,9 @@
 // Author: Michel Barbeau, February 2004
 // Updated: January 15, 2013
 //
+// Modified by: John Caskey, Eric Rhodes, Spencer Whyte
+// 02/01/2013
+//
 // File: wlanrecv.cpp
 //
 
@@ -29,7 +32,8 @@
 
 #include <pthread.h>
 
-// THREADING DEFINES
+// THE NEIGHBOUR TABLE
+nbr_table table;
 
 
 
@@ -188,8 +192,6 @@ Outcome init()
 // receive data over a socket
 void Receive()
 {
-    //neighbour table
-    nbr_table table;
    // pointer to received data
    unsigned char * buff = new unsigned char[ifconfig.mtu];
    unsigned int i; // frame length
@@ -203,7 +205,6 @@ void Receive()
       // loop until a non-empty frame has been received on "device"
       while (true)
       {
-	printf("FML\n");
          // wait and receive a frame
          fromlen = sizeof(from);
          i = recvfrom(ifconfig.sockid, buff, ifconfig.mtu, 0, 
@@ -219,7 +220,6 @@ void Receive()
             break; // exit the loop
 	 }
       }
-      //TODO: spin this off into a new thread
       printf("frame received\n");
 
       char asciiSrcAddr[32], asciiDestAddr[32];
@@ -235,15 +235,14 @@ void Receive()
 
       printf("wlan:%s<<%s\n", asciiDestAddr, asciiSrcAddr);
 
-	//in the future, hello beacons will be much more advanced
+	//is it actually a hello beacon!?
 	char * message = (char *)(buff + sizeof(WLANHeader));
-	const char * beacon = "hello";
-	if (strcmp(message,beacon) == 0){
-		printf("new table entry: %s true -1", asciiSrcAddr);
+	const char* beacon = "hello";
+	if(strcmp(message,beacon)==0){
+		table.beaconRecieved(src);
+    		table.printTable();
 	}
 	printf("message: %s\n",message);
-    table.beaconRecieved(src);
-    table.printTable();
    }
 }
 
@@ -267,7 +266,7 @@ Outcome MySend()
    // destination address (binary)
    WLANAddr daddr;
    // data
-   char dp[] = "This is a shot message!"; 
+   char dp[] = "hello"; 
 
    // convert destination address from ASCII to binary
    daddr.str2wlan(rp);
@@ -379,13 +378,16 @@ Outcome createReceiveThread(){
 
 main()
 {
+   int update_time = rand() % 10 + 3;
    if (init()==OK) 
    {
 
 	if(createSendThread() == OK){
 		if(createReceiveThread() == OK){
 			while(1){
-
+				sleep(update_time);
+				table.update();
+				table.printTable();
 			}
       			shutdown();
 		}

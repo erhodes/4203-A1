@@ -149,7 +149,7 @@ Outcome MySend()
    // destination address (binary)
    WLANAddr daddr;
    // data
-   char dp[] = "This is a shot message!"; 
+   char dp[] = "This is a short message!"; 
 
    // convert destination address from ASCII to binary
    daddr.str2wlan(rp);
