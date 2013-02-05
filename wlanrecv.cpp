@@ -290,7 +290,7 @@ Outcome MySend()
    memmove(buff, &hdr, WLAN_HEADER_LEN);
 
    // store the payload
-   memmove(buff+WLAN_HEADER_LEN, dp, strlen(dp));
+   memmove(buff+WLAN_HEADER_LEN, dp, strlen(dp)+1);
 
    // set the "to address"
    struct sockaddr_ll to = {0};
@@ -302,7 +302,7 @@ Outcome MySend()
 
    // send a frame
    int sentlen = sendto(
-      ifconfig.sockid, buff, WLAN_HEADER_LEN+strlen(dp) + 1, 0, 
+      ifconfig.sockid, buff, WLAN_HEADER_LEN+strlen(dp)+1, 0, 
       (sockaddr *) &to, tolen);
 
    if (sentlen == -1 ) 
