@@ -35,6 +35,10 @@
 // THE NEIGHBOUR TABLE
 nbr_table table;
 
+// NEIGHBOUR TABLE MUTEX
+
+pthread_mutex_t neighbour_mutex;
+
 
 
 
@@ -239,8 +243,10 @@ void Receive()
 	char * message = (char *)(buff + sizeof(WLANHeader));
 	const char* beacon = "hello";
 	if(strcmp(message,beacon)==0){
+		pthread_mutex_lock (&neighbour_mutex);
 		table.beaconRecieved(src);
     		table.printTable();
+		pthread_mutex_unlock (&neighbour_mutex);
 	}
 	printf("message: %s\n",message);
    }
@@ -296,7 +302,7 @@ Outcome MySend()
 
    // send a frame
    int sentlen = sendto(
-      ifconfig.sockid, buff, WLAN_HEADER_LEN+strlen(dp), 0, 
+      ifconfig.sockid, buff, WLAN_HEADER_LEN+strlen(dp) + 1, 0, 
       (sockaddr *) &to, tolen);
 
    if (sentlen == -1 ) 
@@ -378,19 +384,22 @@ Outcome createReceiveThread(){
 
 main()
 {
+   pthread_mutex_init(&neighbour_mutex, NULL);
    int update_time = rand() % 10 + 3;
    if (init()==OK) 
    {
-
 	if(createSendThread() == OK){
 		if(createReceiveThread() == OK){
 			while(1){
 				sleep(update_time);
+				pthread_mutex_lock (&neighbour_mutex);
 				table.update();
 				table.printTable();
+				pthread_mutex_unlock (&neighbour_mutex);
 			}
       			shutdown();
 		}
 	}
    }
+	pthread_mutex_destroy(&neighbour_mutex);
 }
